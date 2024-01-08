@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { FaDownload, FaEye } from 'react-icons/fa6'
 
 import './popup.css'
+import { rules } from './rules'
 import { DownloadMessage, Image, Options } from './types'
 import { cn, removeSpecialCharacters, unique } from './utils/utils'
 import viteSvg from '/vite.svg'
@@ -23,6 +24,11 @@ const App = () => {
     setAllImages((allImages) => unique([...allImages, ...message.allImages]))
 
     setOptions((prev: any) => ({ ...prev, active_tab_origin: message.origin }))
+
+    chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: rules(message.origin).map((rule) => rule.id),
+      addRules: rules(message.origin),
+    })
   }
 
   useEffect(() => {
@@ -185,7 +191,7 @@ const App = () => {
                 onClick={() => onSelectedImage(index, image.url)}
               />
               <div className="flex flex-col text-xs truncate absolute bottom-0 left-0 right-0 z-10 p-1 bg-zinc-800/50 opacity-0 group-hover:opacity-100">
-                <p>{image.width}X{image.height}</p>
+                <p>{image.width}x{image.height}</p>
                 <p>{image.url}</p>
               </div>
               <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 p-1">
@@ -242,12 +248,12 @@ const App = () => {
         <button
           className={cn(
             'py-1.5 px-3 text-center border rounded ',
-            downloadProgress || allImages.length <= 0
+            downloadProgress || selected.length <= 0
               ? 'bg-zinc-900 text-zinc-500 border-zinc-800'
               : 'bg-zinc-800 border-zinc-700 hover:bg-zinc-800/80 focus:border-blue-500',
           )}
           onClick={downloadImages}
-          disabled={downloadProgress || allImages.length <= 0}
+          disabled={downloadProgress || selected.length <= 0}
         >
           {downloadProgress ? 'Downloading...' : 'Download'}
         </button>
