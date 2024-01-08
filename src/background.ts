@@ -97,14 +97,14 @@ chrome.runtime.onInstalled.addListener((details) => {
     details.reason === 'update' &&
     /^(((0|1)\..*)|(2\.(0|1)(\..*)?))$/.test(details.previousVersion!)
   ) {
-    localStorage.clear()
+    chrome.storage.sync.clear()
   }
 })
 
 chrome.runtime.onMessage.addListener((message: Message) => {
   if (message.type !== 'sendImages') return
   const images = unique([...message.allImages, ...message.linkedImages])
-  chrome.browserAction.setBadgeText({ text: images.length.toString() })
+  chrome.action.setBadgeText({ text: images.length.toString() })
 })
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
@@ -112,11 +112,14 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.tabs.query({ active: true, windowId: activeInfo.windowId }, (tabs) => {
     if (chrome.runtime.lastError) return
     if (tabs[0]?.url && !tabs[0]?.url?.includes("chrome://")) {
-      chrome.tabs.executeScript(activeInfo.tabId, {
-        file: 'image-extractor.js',
+      chrome.scripting.executeScript({
+        target: {
+          tabId: activeInfo.tabId,
+        },
+        files: ['image-extractor.js'],
       })
     } else {
-      chrome.browserAction.setBadgeText({ text: '0' })
+      chrome.action.setBadgeText({ text: '0' })
     }
   })
 });

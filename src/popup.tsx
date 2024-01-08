@@ -8,7 +8,7 @@ import { cn, removeSpecialCharacters, unique } from './utils/utils'
 import viteSvg from '/vite.svg'
 
 const App = () => {
-  const [options, setOptions] = useState(localStorage)
+  const [options, setOptions] = useState<any>(null)
 
   const [selectedAll, setSelectedAll] = useState<boolean>(false)
   const [selected, setSelected] = useState<Array<string>>([])
@@ -21,13 +21,24 @@ const App = () => {
 
     setAllImages((allImages) => unique([...allImages, ...message.allImages]))
 
-    localStorage.active_tab_origin = message.origin
+    setOptions((prev: any) => ({ ...prev, active_tab_origin: message.origin }))
 
     setLoading(false)
   }
 
   useEffect(() => {
-    Object.assign(localStorage, options)
+    chrome.storage.sync.get().then((items) => {
+      // Copy the data retrieved from storage into storageCache.
+      setOptions(items || {
+        folder_name: '',
+        active_tab_origin: '',
+      })
+    });
+  }, [])
+
+  useEffect(() => {
+    if (!options) return
+    chrome.storage.sync.set(options);
   }, [options])
 
   useEffect(() => {
@@ -37,11 +48,14 @@ const App = () => {
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.url && !tabs[0]?.url?.includes('chrome://')) {
-        chrome.tabs.executeScript(tabs[0].id!, {
-          file: 'image-extractor.js',
+        chrome.scripting.executeScript({
+          target: {
+            tabId: tabs[0].id!,
+          },
+          files: ['image-extractor.js'],
         })
       } else {
-        chrome.browserAction.setBadgeText({ text: '0', tabId: tabs[0].id! })
+        chrome.action.setBadgeText({ text: '0', tabId: tabs[0].id! })
       }
     })
 
@@ -129,69 +143,70 @@ const App = () => {
           </button>
         </div>
       </header>
-      {!loading ? (
-        <>
-          <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
-            {allImages?.map((url, index) => (
-              <div
-                key={index}
-                className="relative flex items-center justify-center min-w-[150px] min-h-[80px] bg-zinc-900 group"
-              >
-                <img
-                  src={encodeURI(url)}
-                  alt={url.split('/')[-1]}
-                  className="w-auto object-contain group-hover:brightness-50"
-                  onClick={() => onSelectedImage(index, url)}
-                />
-                <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 p-1">
-                  <div className="">
-                    <input
-                      type="checkbox"
-                      checked={selected.find((x) => x === url) ? true : false}
-                      className="h-5 w-5 bg-zinc-800/60 rounded"
-                      onChange={(e) => onSelected(e, index, url)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <a
-                      href={url}
-                      target="_blank"
-                      className="flex items-center gap-2 py-1.5 px-2 bg-zinc-800/60 hover:bg-blue-500 rounded"
-                    >
-                      <FaEye className="h-4 w-4" />
-                    </a>
-                    <button
-                      className="flex items-center gap-2 py-1.5 px-2 bg-zinc-800/60 hover:bg-blue-500 rounded"
-                      onClick={() => downloadImage(url)}
-                    >
-                      <FaDownload className="h-4 w-4" />
-                    </button>
-                  </div>
+      {!loading && allImages.length > 0 ? (
+        <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
+          {allImages?.map((url, index) => (
+            <div
+              key={index}
+              className="relative flex items-center justify-center min-w-[150px] min-h-[80px] bg-zinc-900 group"
+            >
+              <img
+                src={encodeURI(url)}
+                alt={url.split('/')[-1]}
+                className="w-auto object-contain group-hover:brightness-50"
+                onClick={() => onSelectedImage(index, url)}
+              />
+              <div className='text-xs truncate absolute bottom-0 left-0 right-0 z-10 p-1 opacity-0 group-hover:opacity-100 bg-zinc-800/50'>
+                <span>
+                  {url}
+                </span>
+              </div>
+              <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 p-1">
+                <div className="">
+                  <input
+                    type="checkbox"
+                    checked={selected.find((x) => x === url) ? true : false}
+                    className="h-5 w-5 bg-zinc-800/60 rounded"
+                    onChange={(e) => onSelected(e, index, url)}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <a
+                    href={url}
+                    target="_blank"
+                    className="flex items-center gap-2 py-1.5 px-2 bg-zinc-800/60 hover:bg-blue-500 rounded"
+                  >
+                    <FaEye className="h-4 w-4" />
+                  </a>
+                  <button
+                    className="flex items-center gap-2 py-1.5 px-2 bg-zinc-800/60 hover:bg-blue-500 rounded"
+                    onClick={() => downloadImage(url)}
+                  >
+                    <FaDownload className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        </>
+            </div>
+          ))}
+        </div>
       ) : (
-        <>
-          <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
-            {[...Array(10)]?.map((_url, index) => (
-              <div
-                key={index}
-                className="min-w-[150px] h-[160px] bg-zinc-800 animate-pulse"
-              />
-            ))}
-          </div>
-        </>
+        <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
+          {[...Array(10)]?.map((_url, index) => (
+            <div
+              key={index}
+              className="min-w-[150px] h-[160px] bg-zinc-800 animate-pulse"
+            />
+          ))}
+        </div>
       )}
       <footer className="bg-zinc-900 p-2 flex items-center justify-between gap-2">
         <input
           type="text"
           placeholder="Save to sub folder"
           className="py-1.5 px-3 outline-none border border-zinc-800 rounded w-full focus:border-blue-500"
-          value={options.folder_name}
+          value={options?.folder_name}
           onChange={({ target }) => {
-            setOptions((options) => ({
+            setOptions((options: any) => ({
               ...options,
               folder_name: removeSpecialCharacters(target.value),
             }))
