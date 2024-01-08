@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Image Downloader",
+  "description": "Image Downloader",
+  "minimum_chrome_version": "72",
+  "version": "1.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAunXUF5VVUuiBrJ0Fx3O8mhXzk4wTE00V2i9d1ExsH9FIcBIl2LURELZmUUGcyMoemeWI+nfyFaQFYfaii09g0Bj2dnCmvThMeGOoul22vfmOZov8BixLIJ1FwAN24bIaoGVz681jWLoEOxp5YIbtOEJ+r5nVkE9nZAdRzeuYvXvBouC90yl/xY3INq9P+ogu3VaBIUg4VXvn8zQCO6J/O4lFSMC9BiDjKmBDuYZ3pBm9pV0G1dO84/0SNheENzn8mJNOhNQGsO+OqnoD2qvjCtBElQNFqu/55JScL9AplJFWONEKk+57g4Sq4eYWjSol05I4h13FxQ0ADhSx575TuwIDAQAB",
+  "background": {
+    "presistent": true,
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_icon": "vite.png",
+    "default_popup": "index.html"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "128": "vite.png",
+    "48": "vite.png",
+    "16": "vite.png"
+  },
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "http://*/*",
+    "https://*/*"
+  ]
+}
