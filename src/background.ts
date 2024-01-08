@@ -1,7 +1,7 @@
 type Task = {
   imageProcessed: number
   images: string[]
-  options: any
+  options: Options
   next: () => void
 }
 
@@ -10,6 +10,12 @@ type Message = {
   allImages: string[]
   linkedImages: string[]
   origin: string
+}
+
+export type Options = {
+  folder_name: string
+  active_tab_origin: string
+  new_file_name?: string
 }
 
 const unique = (values: any): Array<any> => [...new Set(values)];
@@ -37,24 +43,28 @@ const startDownload = (
     },
   }).then(sendResponse)
 
-  return true // Keeps the message channel open until `resolve` is called
+  return true
 }
 
 const downloadImages = async (task: Task) => {
   tasks.add(task)
-  
-  for (const image of task.images) {
-    await new Promise((resolve) => {
-      chrome.downloads.download({ url: image }, (downloadId: number) => {
-        if (downloadId == null) {
-          if (chrome.runtime.lastError) {
-            console.error(`${image}:`, chrome.runtime.lastError)
+
+  try {
+    for (const image of task.images) {
+      await new Promise((resolve) => {
+        chrome.downloads.download({ url: image }, (downloadId: number) => {
+          if (downloadId == null) {
+            if (chrome.runtime.lastError) {
+              console.error(`${image}:`, chrome.runtime.lastError)
+            }
+            task.next()
           }
-          task.next()
-        }
-        resolve(true)
+          resolve(true)
+        })
       })
-    })
+    }
+  } catch (err) {
+    console.error(err)
   }
 
   return true
@@ -78,9 +88,9 @@ const suggestNewFilename = (
   if (task.options.new_file_name) {
     const regex = /(?:\.([^.]+))?$/
     const extension = regex.exec(item.filename)![1]
-    const numberOfDigits = task.images.length.toString().length
-    const formattedImageNumber = `${task.imageProcessed + 1}`.padStart(numberOfDigits, '0')
-    newFilename += `${task.options.new_file_name}${formattedImageNumber}.${extension}`
+    const digit = task.images.length.toString().length
+    const formatImageNumber = `${task.imageProcessed + 1}`.padStart(digit, '0')
+    newFilename += `${task.options.new_file_name}${formatImageNumber}.${extension}`
   } else {
     newFilename += item.filename
   }
@@ -101,28 +111,51 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 })
 
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  try {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true, windowId: activeInfo.windowId }, ([tab]) => {   
+      if (tab?.url && !tab?.url?.includes("chrome://")) {
+        chrome.scripting.executeScript({
+          target: {
+            tabId: tab?.id!,
+            allFrames: true
+          },
+          files: ['image-extractor.js'],
+        })
+      } else {
+        chrome.action.setBadgeText({ text: '0' })
+      }
+    })
+  } catch (err) {
+    console.error(err)
+  }
+});
+
+chrome.tabs.onUpdated.addListener(() => {
+  try {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => {   
+      if (tab?.url && !tab?.url?.includes("chrome://")) {
+        chrome.scripting.executeScript({
+          target: {
+            tabId: tab?.id!,
+            allFrames: true
+          },
+          files: ['image-extractor.js'],
+        })
+      } else {
+        chrome.action.setBadgeText({ text: '0' })
+      }
+    })
+  } catch (err) {
+    console.error(err)
+  }
+});
+
 chrome.runtime.onMessage.addListener((message: Message) => {
   if (message.type !== 'sendImages') return
   const images = unique([...message.allImages, ...message.linkedImages])
-  chrome.action.setBadgeText({ text: images.length.toString() })
+  chrome.action.setBadgeText({ text: `${images.length}` })
 })
-
-chrome.tabs.onActivated.addListener((activeInfo) => {
-
-  chrome.tabs.query({ active: true, windowId: activeInfo.windowId }, (tabs) => {
-    if (chrome.runtime.lastError) return
-    if (tabs[0]?.url && !tabs[0]?.url?.includes("chrome://")) {
-      chrome.scripting.executeScript({
-        target: {
-          tabId: activeInfo.tabId,
-        },
-        files: ['image-extractor.js'],
-      })
-    } else {
-      chrome.action.setBadgeText({ text: '0' })
-    }
-  })
-});
 
 chrome.runtime.onMessage.addListener(startDownload)
 chrome.downloads.onDeterminingFilename.addListener(suggestNewFilename)

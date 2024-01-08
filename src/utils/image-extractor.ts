@@ -1,5 +1,4 @@
 (() => {
-  // Source: https://support.google.com/webmasters/answer/2598805?hl=en
   const imageUrlRegex = /(?:([^:\/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*\.(?:bmp|gif|ico|jfif|jpe?g|png|svg|tiff?|webp))(?:\?([^#]*))?(?:#(.*))?/i
 
   type Message = {
@@ -9,11 +8,11 @@
     origin: string
   }
 
-  const unique = (values: Array<any>): any[] => toArray(new Set(values))
+  const isTruthy = (value: any): boolean => !!value
 
   const toArray = (values: Set<any> | any): any[] => [...values]
 
-  const isTruthy = (value: any): boolean => !!value
+  const unique = (values: Array<any>): any[] => toArray(new Set(values))
 
   const isImageURL = (url: string): boolean => {
     return url?.indexOf('data:image') === 0 || imageUrlRegex?.test(url)
@@ -23,8 +22,8 @@
     return style?.replace(/^.*url\(["']?/, '').replace(/["']?\).*$/, '')
   }
 
-  const relativeUrlToAbsolute = (url: any) => {
-    return url?.indexOf('/') === 0 ? `${window.location.origin}${url}` : url
+  const relativeUrlToAbsolute = (url: string | undefined): string => {
+    return url?.indexOf('/') === 0 ? `${window.location.origin}${url}` : url!
   }
 
   const extractImagesFromSelector = (selector: string) => {

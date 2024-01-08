@@ -17,3 +17,17 @@ export type Message = {
   linkedImages: string[]
   origin: string
 }
+
+export type Options = {
+  folder_name: string
+  active_tab_origin: string
+  new_file_name?: string
+}
+
+
+export type Image = { 
+  url: string,
+  width: number,
+  height: number,
+  alt: string
+}
