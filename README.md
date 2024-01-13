@@ -2,6 +2,8 @@
 
 > A browser extension that makes downloading images from the web easier and adds useful features.
 
+![Image Downloader Screenshot](./screenshot.jpg)
+
 ## Features
 
 - Multiple image downloads
