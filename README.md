@@ -7,12 +7,25 @@
 ## Features
 
 - Multiple image downloads
+- Save as JSON
 
 ## Download
 
 Get the app from our [releases page](https://github.com/zeindevs/imagedl-extensions/releases).
 
 If you want to try new features before they get to the stable release, you can download the preview version [here](https://github.com/zeindevs/imagedl-extensions-preview/releases).
+
+## Installation
+
+> [!NOTE]
+> This extension is currently not available in the [Chrome Web Store](https://chromewebstore.google.com/), you will need to install it manually.
+
+### Install Manually
+
+- Go to <chrome://extensions/>
+- Enable Developer Mode
+- Load unpacked
+- Select the extracted folder [imagedl-extensions](https://github.com/zeindevs/imagedl-extensions/releases)
 
 ## License
 
