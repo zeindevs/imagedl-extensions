@@ -1,4 +1,4 @@
-const allResourceTypes = Object.values(chrome.declarativeNetRequest.ResourceType);
+const allResourceTypes = Object.values(chrome.declarativeNetRequest.ResourceType)
 
 export const rules = (origin: string): chrome.declarativeNetRequest.Rule[] => [
   {
@@ -12,11 +12,11 @@ export const rules = (origin: string): chrome.declarativeNetRequest.Rule[] => [
           header: 'Referer',
           value: origin,
         },
-      ]
+      ],
     },
     condition: {
       urlFilter: '*',
       resourceTypes: allResourceTypes,
-    }
+    },
   },
-];
+]

@@ -33,7 +33,7 @@ const App = () => {
 
   useEffect(() => {
     chrome.storage.sync.get().then((items) => {
-      setOptions(items as Options || { folder_name: '', active_tab_origin: '' })
+      setOptions((items as Options) || { folder_name: '', active_tab_origin: '' })
     })
   }, [])
 
@@ -75,21 +75,23 @@ const App = () => {
   }, [])
 
   const filterImages = useCallback(() => {
-
     let tmp: Image[] = allImages?.map((url, index) => {
-      const image: HTMLImageElement = imageRef.current?.querySelector(`img[src="${encodeURI(url)}"]`)!
-      return { url: url, width: image?.naturalWidth, height: image?.naturalHeight, alt: `Image ${index + 1}` }
+      const image: HTMLImageElement = imageRef.current?.querySelector(
+        `img[src="${encodeURI(url)}"]`,
+      )!
+      return {
+        url: url,
+        width: image?.naturalWidth,
+        height: image?.naturalHeight,
+        alt: `Image ${index + 1}`,
+      }
     })
 
     setImages(tmp)
     setLoading(false)
   }, [allImages])
 
-  const onSelected = (
-    e: FormEvent<HTMLInputElement>,
-    index: number,
-    url: string = '',
-  ) => {
+  const onSelected = (e: FormEvent<HTMLInputElement>, index: number, url: string = '') => {
     if (e.currentTarget?.checked || selected.indexOf(url) === -1) {
       setSelected((prev) => [...prev, allImages[index]])
     } else {
@@ -112,6 +114,16 @@ const App = () => {
       setSelected([])
     }
     setSelectedAll(!selectedAll)
+  }
+
+  const onSaveJSON = () => {
+    chrome.runtime.sendMessage<DownloadMessage>(
+      {
+        type: 'saveJSON',
+        images: selected,
+        options,
+      },
+    )
   }
 
   const downloadImages = async () => {
@@ -144,37 +156,26 @@ const App = () => {
         <div className="bg-zinc-950 p-3">
           <div className="flex items-center gap-2">
             <div className="h-18 w-18">
-              <img
-                src={viteSvg}
-                alt="Logo"
-                className="w-full h-full"
-                crossOrigin="anonymous"
-              />
+              <img src={viteSvg} alt="Logo" className="w-full h-full" crossOrigin="anonymous" />
             </div>
             <h1 className="text-lg font-bold">Image Downloader</h1>
           </div>
         </div>
         <div className="bg-zinc-900 p-2">
           <button className="flex items-center gap-2" onClick={onSelectedAll}>
-            <input
-              type="checkbox"
-              checked={selectedAll}
-              onChange={onSelectedAll}
-            />
+            <input type="checkbox" checked={selectedAll} onChange={onSelectedAll} />
             <span>
               Select All ({selected.length}/{allImages.length})
             </span>
           </button>
         </div>
       </header>
-      <div ref={imageRef} className='w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto hidden'>
+      <div
+        ref={imageRef}
+        className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto hidden"
+      >
         {allImages?.map((url, index) => (
-          <img
-            key={index}
-            src={encodeURI(url)}
-            alt={`Image ${index + 1}`}
-            onLoad={filterImages}
-          />
+          <img key={index} src={encodeURI(url)} alt={`Image ${index + 1}`} onLoad={filterImages} />
         ))}
       </div>
       {!loading && images.length > 0 ? (
@@ -191,7 +192,9 @@ const App = () => {
                 onClick={() => onSelectedImage(index, image.url)}
               />
               <div className="flex flex-col text-xs truncate absolute bottom-0 left-0 right-0 z-10 p-1 bg-zinc-800/50 opacity-0 group-hover:opacity-100">
-                <p>{image.width}x{image.height}</p>
+                <p>
+                  {image.width}x{image.height}
+                </p>
                 <p>{image.url}</p>
               </div>
               <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 p-1">
@@ -225,10 +228,7 @@ const App = () => {
       ) : (
         <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
           {[...Array(10)]?.map((_url, index) => (
-            <div
-              key={index}
-              className="min-w-[150px] h-[160px] bg-zinc-800 animate-pulse"
-            />
+            <div key={index} className="min-w-[150px] h-[160px] bg-zinc-800 animate-pulse" />
           ))}
         </div>
       )}
@@ -247,6 +247,18 @@ const App = () => {
         />
         <button
           className={cn(
+            'py-1.5 px-3 text-center border rounded whitespace-nowrap',
+            selected.length <= 0
+              ? 'bg-zinc-900 text-zinc-500 border-zinc-800'
+              : 'bg-zinc-800 border-zinc-700 hover:bg-zinc-800/80 focus:border-blue-500',
+          )}
+          onClick={onSaveJSON}
+          disabled={selected.length <= 0}
+        >
+          Save as JSON
+        </button>
+        <button
+          className={cn(
             'py-1.5 px-3 text-center border rounded ',
             downloadProgress || selected.length <= 0
               ? 'bg-zinc-900 text-zinc-500 border-zinc-800'
@@ -262,6 +274,4 @@ const App = () => {
   )
 }
 
-ReactDOM.createRoot(document.querySelector<HTMLDivElement>('#app')!).render(
-  <App />,
-)
+ReactDOM.createRoot(document.querySelector<HTMLDivElement>('#app')!).render(<App />)

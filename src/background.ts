@@ -18,7 +18,7 @@ export type Options = {
   new_file_name?: string
 }
 
-const unique = (values: any): Array<any> => [...new Set(values)];
+const unique = (values: any): Array<any> => [...new Set(values)]
 
 const normalizeSlashes = (filename: string) => filename.replace(/\\/g, '/').replace(/\/{2,}/g, '/')
 
@@ -29,6 +29,31 @@ const startDownload = (
   _sender: chrome.runtime.MessageSender,
   sendResponse: (response?: any) => void,
 ) => {
+  if (message.type === 'saveJSON') {
+    // Create a blob of the data
+    let data = JSON.stringify(message.images)
+    var blob = new Blob([data], {
+      type: 'application/json',
+    })
+
+    chrome.downloads.download(
+      {
+        url: `data:${blob.type};base64,${btoa(data)}`,
+        saveAs: true,
+      },
+      (downloadId: number) => {
+        if (downloadId == null) {
+          if (chrome.runtime.lastError) {
+            console.error(`saveJSON:`, chrome.runtime.lastError)
+          }
+        }
+        return true
+      },
+    )
+
+    sendResponse()
+  }
+
   if (!(message && message.type === 'downloadImages')) return
 
   downloadImages({
@@ -113,32 +138,35 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
   try {
-    chrome.tabs.query({ active: true, lastFocusedWindow: true, windowId: activeInfo.windowId }, ([tab]) => {   
-      if (tab?.url && !tab?.url?.includes("chrome://")) {
-        chrome.scripting.executeScript({
-          target: {
-            tabId: tab?.id!,
-            allFrames: true
-          },
-          files: ['image-extractor.js'],
-        })
-      } else {
-        chrome.action.setBadgeText({ text: '0' })
-      }
-    })
+    chrome.tabs.query(
+      { active: true, lastFocusedWindow: true, windowId: activeInfo.windowId },
+      ([tab]) => {
+        if (tab?.url && !tab?.url?.includes('chrome://')) {
+          chrome.scripting.executeScript({
+            target: {
+              tabId: tab?.id!,
+              allFrames: true,
+            },
+            files: ['image-extractor.js'],
+          })
+        } else {
+          chrome.action.setBadgeText({ text: '0' })
+        }
+      },
+    )
   } catch (err) {
     console.error(err)
   }
-});
+})
 
 chrome.tabs.onUpdated.addListener(() => {
   try {
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => {   
-      if (tab?.url && !tab?.url?.includes("chrome://")) {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => {
+      if (tab?.url && !tab?.url?.includes('chrome://')) {
         chrome.scripting.executeScript({
           target: {
             tabId: tab?.id!,
-            allFrames: true
+            allFrames: true,
           },
           files: ['image-extractor.js'],
         })
@@ -149,7 +177,7 @@ chrome.tabs.onUpdated.addListener(() => {
   } catch (err) {
     console.error(err)
   }
-});
+})
 
 chrome.runtime.onMessage.addListener((message: Message) => {
   if (message.type !== 'sendImages') return

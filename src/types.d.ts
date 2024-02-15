@@ -24,10 +24,9 @@ export type Options = {
   new_file_name?: string
 }
 
-
-export type Image = { 
-  url: string,
-  width: number,
-  height: number,
+export type Image = {
+  url: string
+  width: number
+  height: number
   alt: string
 }
