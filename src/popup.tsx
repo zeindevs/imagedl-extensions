@@ -6,7 +6,7 @@ import './popup.css'
 import { rules } from './rules'
 import { DownloadMessage, Image, Options } from './types'
 import { cn, removeSpecialCharacters, unique } from './utils/utils'
-import viteSvg from '/vite.svg'
+import favicon from '/favicon.png'
 
 const App = () => {
   const [options, setOptions] = useState<Options | null>(null)
@@ -155,8 +155,8 @@ const App = () => {
       <header className="sticky top-0 z-10">
         <div className="bg-zinc-950 p-3">
           <div className="flex items-center gap-2">
-            <div className="h-18 w-18">
-              <img src={viteSvg} alt="Logo" className="w-full h-full" crossOrigin="anonymous" />
+            <div className="h-9 w-9">
+              <img src={favicon} alt="Logo" className="w-full h-full" crossOrigin="anonymous" />
             </div>
             <h1 className="text-lg font-bold">Image Downloader</h1>
           </div>
@@ -172,14 +172,14 @@ const App = () => {
       </header>
       <div
         ref={imageRef}
-        className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto hidden"
+        className="w-full grid grid-cols-2 p-2 gap-2 max-h-[450px] h-full overflow-y-auto hidden"
       >
         {allImages?.map((url, index) => (
           <img key={index} src={encodeURI(url)} alt={`Image ${index + 1}`} onLoad={filterImages} />
         ))}
       </div>
       {!loading && images.length > 0 ? (
-        <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
+        <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[450px] h-full overflow-y-auto">
           {images?.map((image, index) => (
             <div
               key={index}
@@ -226,7 +226,7 @@ const App = () => {
           ))}
         </div>
       ) : (
-        <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[460px] h-full overflow-y-auto">
+        <div className="w-full grid grid-cols-2 p-2 gap-2 max-h-[450px] h-full overflow-y-auto">
           {[...Array(10)]?.map((_url, index) => (
             <div key={index} className="min-w-[150px] h-[160px] bg-zinc-800 animate-pulse" />
           ))}
