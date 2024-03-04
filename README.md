@@ -1,8 +1,12 @@
 # Image Downloader
 
-> A browser extension that makes downloading images from the web easier and adds useful features.
-
 ![Image Downloader Screenshot](./screenshot.jpg)
+
+<div align="center">
+
+#### A browser extension that makes downloading images from the web easier and adds useful features.
+
+</div>
 
 ## Features
 
