@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { zip } from 'zip-a-folder'
 
-import manifest from './manifest.json' assert { type: 'json' }
+import manifest from './manifest.json' with { type: 'json' }
 
 const build = async () => {
 	if (!existsSync('build')) {
